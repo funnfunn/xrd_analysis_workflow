@@ -1,5 +1,44 @@
 *~
-
 venv/
-data/
+
+
+data/PS*.hdf
+# split files for easier upload
+data/PS*.hdf_a*
+data/PS*.nxs
+
+# directories containing other raw data, e.g. electrochemistry, photos, TEM
+data/PS*/
+data/TEM/
+data/artificial_pits/
+
+data/cif_files/
+data/*.tgz
+
+*#*
+
+
+results/
+
+
+# Python stuff
+# Byte-compiled, optimized, DLL files
 *__pycache__/
+*.py[cod]
+*$py.class
+# Unit tests, coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+# see this for more Python stuff to ignore:
+# https://github.com/github/gitignore/blob/master/Python.gitignore

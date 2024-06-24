@@ -1,32 +1,71 @@
-# Analysis of 2D X-ray diffraction images
+# Data analysis for article Gostin et al 2018
 
-This workflow takes raw 2D images, performs azimuthal integration on them resulting in an intensity versus 2theta plot and calculates lattice spacing from peak position.
+P. F. Gostin et al., *In Situ Synchrotron X‐Ray Diffraction
+Characterization of Corrosion Products of a Ti‐Based Metallic Glass
+for Implant Applications*, Advanced Healthcare Materials, 2018, 7,
+1800338 (<https://doi.org/10.1002/adhm.201800338>)
 
-Please try to reproduce my results on your machine by following the steps bellow.  You will know it worked if you get two figures and a text file in `xrd_analysis_workflow/results/final/`.  These should look like Fig. 1c (page 25), Fig. S1 (page 35) and the 1st row in Table 2 (page 31) in the manuscript at `xrd_analysis_workflow/doc/manuscript.pdf`.  Please let me know how it went by issuing an `Issue` at the top of the screen or email me.  You are also welcome to send me `Pull requests`. 
+Free pre-publication full-text version:
+[doc/manuscript_Gostin_2018.pdf](doc/manuscript_Gostin_2018.pdf)
 
-## Follow these steps:
+**This project automatically:**
+- downloads raw data from a [data repository on
+  Zenodo](https://zenodo.org/record/4039843)
+- processes the data (calibration, azimuthal integration etc.)
+- plots figures and table
 
-- Fork this repository. Click on the "Fork" button just below the top right of the screen
-- Select the URL of your new forked repository from the URL bar, and copy it. The URL will be of form https://github.com/your-user-name/xrd_analysis_workflow
-- Open the terminal
-- Change directory to where you want to have the directory of this repository, e.g. Desktop, so `cd Desktop`
-- Clone the repository with: `git clone [URL copied above]`
-- Change directory to the repository directory: `cd xrd_analysis_workflow/`
-- Create a virtual environment, e.g. install virtualenv with `sudo apt install virtualenv` if it is not already installed, create a virtual environment with `virtualenv --python=python3.5 venv` (a directory `venv/` will be created, which will contain the Python packages)
-- Activate the virtual environment with `source venv/bin/activate` (you can deactivate it with `deactivate`, but don't do it now) 
-- Install the requirements in `requirements.txt`, e.g. with `pip install -r requirements.txt`
-- Dig deep inside the virtual environment directory for the module pyFAI.azimuthalIntegrator (something like `xrd_analysis_workflow/venv/lib/python3.5/site-packages/pyFAI/azimuthalIntegrator.py`). At line 178 insert `try:` (above the line `from .opencl import ocl`, which of course needs to be indented) and below it add two lines: `except ImportError:` and with indent `ocl = None` (see Important note below)
-- Finally, download the raw diffraction data from Figshare and do the analysis simply with the command (make sure you are in the project root, i.e. `xrd_analysis_workflow` and the virtual environment is active): `make all`. This will download an archive of 1.3G in `data/`, and un-archive it (so it will write another 1.3G on your drive), followed by analysis, which took approx. 2 min on my laptop.
-- If you get some ImportError warnings, you probably need to install those modules that are indicated in the warnings. Make sure the virtual environment is active and install those modules with `pip install module_name`
-- Try again the command: `make all` or just `make analysis` if the raw data has been downloaded at the previous `make all` (check the terminal output or the directory `xrd_analysis_workflow`)
-- Finally finally, compare the files in `xrd_analysis_workflow/results/final/` directory with the manuscript as said above.
+**To repeat the analysis**
+- `git clone https://github.com/flaviu-gostin/xrd_analysis_workflow.git`
+- `cd xrd_analysis_workflow/`
+- `sudo apt install virtualenv`
+- `python3 -m venv ./venv` You need Python3.8 for this project
+- `source venv/bin/activate`
+- `python3 -m pip install -r requirements.txt`
+- `make all` Downloads 14.6 GB (but reserve 30 GB) and performs all
+  the data processing and plotting.
 
+You need to reserve more storage space as downloaded archives and
+split files will automatically be decompressed/concatenated.  To
+delete the archives and split files:
+- `make clean-data`
 
-## Important note
+You should find the results in [results/](results/)
 
-Unfortunately, when _from pyFAI.azimuthalIntegrator import AzimuthalIntegrator_ an _ImportError: cannot import name 'ocl'_ is raised with pyFAI 0.17.0. The solution that seems best now is to modify the pyFAI/azimuthalIntegrator.py module to add a `try` statement before the problematic import at line 178, as has been done for the latest version of that module on https://github.com/silx-kit/pyFAI/blob/master/pyFAI/azimuthalIntegrator.py, see commit 1e2b476
-This is how your modification should look like:
-`try:`
-`(indent) from .opencl import ocl`
-`except ImportError:`
-`(indent) ocl = None`
+## Questions and feedback
+
+Please feel free to create an issue or a pull request on GitHub or
+email me.
+
+## How it works
+- download raw 2D XRD image data from [a Zenodo
+  repository](https://zenodo.org/record/4039843)
+- perform azimuthal integration on those images resulting in 1D XRD
+  patterns using [pyFAI](https://github.com/silx-kit/pyFAI)
+- determine peak position, calculate lattice spacing and write values
+  in a table
+- calculate diffraction patterns from structures using
+  [pymatgen](https://github.com/materialsproject/pymatgen)
+- plot measured and calculated diffraction patterns using
+  [matplotlib](https://github.com/matplotlib/matplotlib)
+
+## Note on calibration (geometry refinement)
+
+Calibration uses the Python module pyFAI.  This is listed in
+requirements.txt.  When installing this module, a set of command line
+interfaces (CLIs) are also installed in bin/, e.g. pyFAI-calib.  The
+recommended way to do the calibration is to use the pyFAI-calib CLI
+(there is also a GUI available for that).  With those interfaces the
+user must click on several diffraction rings to help the program
+locate the rings.  Another reason for using the CLI or the GUI is to
+be able to check visually that the refined rings match well enough the
+real rings of the calibrant.  However, I intentionally avoided using
+either interface because clicks cannot be reproduced easily.  Instead,
+I wrote a script which uses the refinement function in pyFAI and takes
+as arguments a long list of manually selected points.  Thus, the
+calibration is guaranteed to be reproducible.  Moreover, one can check
+that the manually selected points are located on diffraction rings.
+
+The refined (calibrated) geometry is saved in a .poni file.  This .poni file is
+the basis for the azimuthal integrator object used to integrate all the
+diffraction images.  Thus, if the calibration is changed, most of the results
+might change.  This will most likely be a minor change.
